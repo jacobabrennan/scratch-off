@@ -22,7 +22,7 @@ import Vue from './vue.esm.browser.js';
 Vue.component('image-scratcher', {
     template: (`
         <keep-alive>
-            <canvas />
+            <canvas style="border: double 3px black" />
         </keep-alive>
     `),
     props: {

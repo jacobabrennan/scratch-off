@@ -6,7 +6,7 @@
         <script src="index.js" type="module"></script>
     </head>
     <body>
-        <div id="root">
+        <div id="root" @click="width=Math.random()*1000">
             <image-scratcher
                 :width="width"
                 :height="height"
