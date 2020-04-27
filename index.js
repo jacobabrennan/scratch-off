@@ -9,5 +9,8 @@ import './scratcher.js';
 //------------------------------------------------
 new Vue({
     el: '#root',
-    data: {},
+    data: {
+        height: 500,
+        width: 500,
+    },
 });

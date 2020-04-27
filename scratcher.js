@@ -21,6 +21,31 @@ import Vue from './vue.esm.browser.js';
 //------------------------------------------------
 Vue.component('image-scratcher', {
     template: (`
-        <canvas />
+        <keep-alive>
+            <canvas />
+        </keep-alive>
     `),
+    props: {
+        width: {
+            type: Number,
+            required: true,
+        },
+        height: {
+            type: Number,
+            required: true,
+        },
+    },
+    mounted() {
+        this.handleSizeSet();
+    },
+    watch: {
+        width: 'handleSizeSet',
+        height: 'handleSizeSet',
+    },
+    methods: {
+        handleSizeSet() {
+            this.$el.width = this.width;
+            this.$el.height = this.height;
+        },
+    },
 });
