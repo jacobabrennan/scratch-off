@@ -29,6 +29,8 @@ Vue.component('image-scratcher', {
         return {
             imageForeground: new Image(),
             imageBackground: new Image(),
+            foregroundReady: false,
+            backgroundReady: false,
         };
     },
     props: {
@@ -59,15 +61,20 @@ Vue.component('image-scratcher', {
     },
     mounted() {
         this.handleSizeSet();
+        this.context = this.$el.getContext('2d');
     },
     watch: {
+        width: 'handleSizeSet',
+        height: 'handleSizeSet',
         foreground: {
+            immediate: true,
             handler: function (valueNew) {
                 this.foregroundReady = false;
                 this.imageForeground.src = valueNew;
             },
         },
         background: {
+            immediate: true,
             handler: function (valueNew) {
                 this.backgroundReady = false;
                 this.imageBackground.src = valueNew;
@@ -80,6 +87,12 @@ Vue.component('image-scratcher', {
         handleSizeSet() {
             this.$el.width = this.width;
             this.$el.height = this.height;
+            this.draw();
+        },
+        draw() {
+            if(!this.foregroundReady || !this.backgroundReady) { return;}
+            this.context.drawImage(this.background, 0, 0);
+            this.context.drawImage(this.foreground, 0, 0);
         },
     },
 });
