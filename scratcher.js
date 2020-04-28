@@ -91,8 +91,32 @@ Vue.component('image-scratcher', {
         },
         draw() {
             if(!this.foregroundReady || !this.backgroundReady) { return;}
-            this.context.drawImage(this.background, 0, 0);
-            this.context.drawImage(this.foreground, 0, 0);
+            // Draw top layer
+            this.context.save();
+            this.context.fillStyle = 'black';
+            this.context.fillRect(0, 0, this.width, this.height);
+            this.centerImage(this.foreground);
+            // Fill background in empty area, and crop to background shape
+            this.context.globalCompositeOperation = 'destination-atop';
+            this.centerImage(this.imageBackground);
+            //
+            this.context.restore();
+        },
+        centerImage(image) {
+            let offsetX = 0;
+            let offsetY = 0;
+            let drawWidth = this.width;
+            let drawHeight = this.height;
+            const aspectRatioCanvas = this.width/this.height;
+            const aspectRatioImage = image.naturalWidth / image.naturalHeight;
+            if(aspectRatioCanvas >= aspectRatioImage) {
+                drawWidth = aspectRatioImage * drawHeight;
+                offsetX = (this.width - drawWidth) / 2;
+            } else {
+                drawHeight = aspectRatioImage * drawWidth;
+                offsetY = (this.height - drawHeight) / 2;
+            }
+            this.context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
         },
     },
 });
