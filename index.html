@@ -6,10 +6,12 @@
         <script src="index.js" type="module"></script>
     </head>
     <body>
-        <div id="root" @click="width=Math.random()*1000">
+        <div id="root">
             <image-scratcher
                 :width="width"
                 :height="height"
+                foreground="image_flag.svg"
+                background="image_shape.svg"
             />
         </div>
     </body>
