@@ -6,12 +6,12 @@
         <script src="index.js" type="module"></script>
     </head>
     <body style="background: linear-gradient(45deg, blue 50%, darkblue 50%); background-size: 10px 10px;">
-        <div id="root">
+        <div id="root" @click="width=Math.random()*500">
             <image-scratcher
                 :width="width"
                 :height="height"
-                foreground="image_flag.svg"
-                background="image_shape.svg"
+                foreground="images/flag.svg"
+                background="images/shape.svg"
             />
         </div>
     </body>
