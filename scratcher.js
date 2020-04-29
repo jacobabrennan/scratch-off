@@ -20,6 +20,7 @@ import Vue from './vue.esm.browser.js';
 
 //-- Constants -----------------------------------
 const SCRATCH_LINE_WIDTH = 32;
+const SCRATCH_LAYER_THICKNESS = 1;
 
 //------------------------------------------------
 Vue.component('image-scratcher', {
@@ -110,10 +111,17 @@ Vue.component('image-scratcher', {
             this.context.fillStyle = 'black';
             this.context.fillRect(0, 0, this.width, this.height);
             this.context.globalCompositeOperation = 'destination-out';
-            this.context.drawImage(this.scratchContext.canvas, 0, 0);
+            this.context.drawImage(
+                this.scratchContext.canvas,
+                -SCRATCH_LAYER_THICKNESS,
+                -SCRATCH_LAYER_THICKNESS,
+            );
             // Draw foreground onto scratch layer content
             this.context.globalCompositeOperation = 'source-atop';
             this.centerImage(this.imageForeground);
+            // Add shadow / thickness to scratch layer
+            this.context.globalCompositeOperation = 'destination-over';
+            this.context.drawImage(this.scratchContext.canvas, 0, 0);
             // Fill background in empty area, and crop to background shape
             this.context.globalCompositeOperation = 'destination-atop';
             this.centerImage(this.imageBackground);
