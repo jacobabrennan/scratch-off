@@ -21,6 +21,7 @@ import Vue from './vue.esm.browser.js';
 //-- Constants -----------------------------------
 const SCRATCH_LINE_WIDTH = 32;
 const SCRATCH_LAYER_THICKNESS = 1;
+const SCRATCH_SHADOW_COLOR = '#888';
 
 //------------------------------------------------
 Vue.component('image-scratcher', {
@@ -40,14 +41,8 @@ Vue.component('image-scratcher', {
         };
     },
     props: {
-        width: {
-            type: Number,
-            required: true,
-        },
-        height: {
-            type: Number,
-            required: true,
-        },
+        width: Number,
+        height: Number,
         foreground: {
             type: String,
             required: true,
@@ -57,21 +52,20 @@ Vue.component('image-scratcher', {
             required: true,
         },
     },
-    created() {
+    mounted() {
         //
         let scratchCanvas = document.createElement('canvas');
         this.scratchContext = scratchCanvas.getContext('2d');
+        //
+        this.context = this.$el.getContext('2d');
         //
         this.imageForeground.addEventListener('load', () => {
             this.foregroundReady = true;
         });
         this.imageBackground.addEventListener('load', () => {
             this.backgroundReady = true;
+            this.handleSizeSet();
         });
-    },
-    mounted() {
-        this.handleSizeSet();
-        this.context = this.$el.getContext('2d');
     },
     watch: {
         width: 'handleSizeSet',
@@ -94,33 +88,50 @@ Vue.component('image-scratcher', {
         backgroundReady: 'draw',
     },
     methods: {
+        displayWidth: function () {
+            if(isFinite(this.width)) {
+                return this.width;
+            }
+            return this.imageBackground.naturalWidth;
+        },
+        displayHeight: function () {
+            if(isFinite(this.height)) {
+                return this.height;
+            }
+            return this.imageBackground.naturalHeight;
+        },
         handleSizeSet() {
             //
-            const scratchCanvas = this.scratchContext.canvas;
-            scratchCanvas.width = this.width;
-            scratchCanvas.height = this.height;
+            const width = this.displayWidth();
+            const height = this.displayHeight();
             //
-            this.$el.width = this.width;
-            this.$el.height = this.height;
+            const scratchCanvas = this.scratchContext.canvas;
+            scratchCanvas.width = width;
+            scratchCanvas.height = height;
+            //
+            this.$el.width = width;
+            this.$el.height = height;
             this.draw();
         },
         draw() {
             if(!this.foregroundReady || !this.backgroundReady) { return;}
             // Draw top layer with scratched portion removed
+            const width = this.displayWidth();
+            const height = this.displayHeight();
             this.context.save();
-            this.context.fillStyle = 'black';
-            this.context.fillRect(0, 0, this.width, this.height);
+            this.context.fillStyle = SCRATCH_SHADOW_COLOR;
+            this.context.fillRect(0, 0, width, height);
             this.context.globalCompositeOperation = 'destination-out';
             this.context.drawImage(
                 this.scratchContext.canvas,
-                -SCRATCH_LAYER_THICKNESS,
-                -SCRATCH_LAYER_THICKNESS,
+                SCRATCH_LAYER_THICKNESS,
+                SCRATCH_LAYER_THICKNESS,
             );
             // Draw foreground onto scratch layer content
             this.context.globalCompositeOperation = 'source-atop';
             this.centerImage(this.imageForeground);
             // Add shadow / thickness to scratch layer
-            this.context.globalCompositeOperation = 'destination-over';
+            // this.context.globalCompositeOperation = 'destination-over';
             this.context.drawImage(this.scratchContext.canvas, 0, 0);
             // Fill background in empty area, and crop to background shape
             this.context.globalCompositeOperation = 'destination-atop';
@@ -129,18 +140,20 @@ Vue.component('image-scratcher', {
             this.context.restore();
         },
         centerImage(image) {
+            const width = this.displayWidth();
+            const height = this.displayHeight();
             let offsetX = 0;
             let offsetY = 0;
-            let drawWidth = this.width;
-            let drawHeight = this.height;
-            const aspectRatioCanvas = this.width/this.height;
+            let drawWidth = width;
+            let drawHeight = height;
+            const aspectRatioCanvas = width/height;
             const aspectRatioImage = image.naturalWidth / image.naturalHeight;
             if(aspectRatioCanvas >= aspectRatioImage) {
                 drawWidth = aspectRatioImage * drawHeight;
-                offsetX = (this.width - drawWidth) / 2;
+                offsetX = (width - drawWidth) / 2;
             } else {
                 drawHeight = aspectRatioImage * drawWidth;
-                offsetY = (this.height - drawHeight) / 2;
+                offsetY = (height - drawHeight) / 2;
             }
             this.context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
         },
