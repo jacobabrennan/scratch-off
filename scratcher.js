@@ -20,8 +20,9 @@ import Vue from './vue.esm.browser.js';
 
 //-- Constants -----------------------------------
 const SCRATCH_LINE_WIDTH = 32;
-const SCRATCH_LAYER_THICKNESS = 1;
+const SCRATCH_LAYER_THICKNESS = 2;
 const SCRATCH_SHADOW_COLOR = '#888';
+const SCRATCH_COMPLETE_PERCENT = 1/2;
 
 //------------------------------------------------
 Vue.component('image-scratcher', {
@@ -119,7 +120,7 @@ Vue.component('image-scratcher', {
             const width = this.displayWidth();
             const height = this.displayHeight();
             this.context.save();
-            this.context.fillStyle = SCRATCH_SHADOW_COLOR;
+            this.context.fillStyle = 'black';
             this.context.fillRect(0, 0, width, height);
             this.context.globalCompositeOperation = 'destination-out';
             this.context.drawImage(
@@ -139,7 +140,7 @@ Vue.component('image-scratcher', {
             //
             this.context.restore();
         },
-        centerImage(image) {
+        centerImage(image, context) {
             const width = this.displayWidth();
             const height = this.displayHeight();
             let offsetX = 0;
@@ -155,7 +156,8 @@ Vue.component('image-scratcher', {
                 drawHeight = aspectRatioImage * drawWidth;
                 offsetY = (height - drawHeight) / 2;
             }
-            this.context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
+            if(!context) { context = this.context;}
+            context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
         },
         handleMouseMove(mouseEvent) {
             // Calculate coordinates of event relative to the canvas
@@ -178,13 +180,13 @@ Vue.component('image-scratcher', {
         },
         eraseScratchLine(startX, startY, endX, endY) {
             // Draw a line on compositing canvas from start(x,y) to end(x,y)
-            this.scratchContext.strokeStyle = 'black';
+            this.scratchContext.strokeStyle = SCRATCH_SHADOW_COLOR;
             this.scratchContext.lineWidth = SCRATCH_LINE_WIDTH;
             this.scratchContext.beginPath();
             this.scratchContext.moveTo(startX, startY);
             this.scratchContext.lineTo(endX, endY);
             this.scratchContext.closePath();
             this.scratchContext.stroke();
-        }
+        },
     },
 });
