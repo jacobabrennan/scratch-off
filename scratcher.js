@@ -21,14 +21,14 @@ import Vue from './vue.esm.browser.js';
 //-- Constants -----------------------------------
 const SCRATCH_LINE_WIDTH = 32;
 const SCRATCH_LAYER_THICKNESS = 2;
-const SCRATCH_SHADOW_COLOR = '#888';
-const SCRATCH_COMPLETE_PERCENT = 1/2;
+const SCRATCH_SHADOW_COLOR = '#666';
+const SCRATCH_COMPLETE_PERCENT = 98/100;
 
 //------------------------------------------------
 Vue.component('image-scratcher', {
     template: (`
         <keep-alive>
-            <canvas @mousemove="handleMouseMove" style="border: double 3px black" />
+            <canvas @mousemove="handleMouseMove" />
         </keep-alive>
     `),
     data: function () {
@@ -187,6 +187,24 @@ Vue.component('image-scratcher', {
             this.scratchContext.lineTo(endX, endY);
             this.scratchContext.closePath();
             this.scratchContext.stroke();
+            this.unscratchedPercent();
+        },
+        unscratchedPercent() {
+            const width = this.displayWidth();
+            const height = this.displayHeight();
+            const dataDisplay = this.context.getImageData(0, 0, width, height);
+            const dataScratch = this.scratchContext.getImageData(0, 0, width, height);
+            let pixelTotal = 0;
+            let pixelScratched = 0;
+            for(let displayIndex = 3; displayIndex < dataDisplay.data.length; displayIndex += 4) {
+                const alpha = dataDisplay.data[displayIndex];
+                if(!alpha) { continue;}
+                pixelTotal++;
+                const scratchAlpha = dataScratch.data[displayIndex];
+                if(!scratchAlpha) { continue;}
+                pixelScratched++;
+            }
+            return pixelScratched/pixelTotal;
         },
     },
 });
