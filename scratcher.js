@@ -8,7 +8,7 @@
     background="url or hex color"
     width="Integer"
     height="Integer"
-    onscratch="function"
+    @finished="[...]"
     scratch-percent="Number, [0,1]"
     shape="background or foreground (background)"
     reveal="Boolean (false)"
@@ -19,6 +19,7 @@
 import Vue from './vue.esm.browser.js';
 
 //-- Constants -----------------------------------
+export const EVENT_FINISHED = 'finished';
 const SCRATCH_LINE_WIDTH = 32;
 const SCRATCH_LAYER_THICKNESS = 2;
 const SCRATCH_SHADOW_COLOR = '#666';
@@ -39,6 +40,7 @@ Vue.component('image-scratcher', {
             backgroundReady: false,
             lastMoveX: null,
             lastMoveY: null,
+            completed: false,
         };
     },
     props: {
@@ -174,7 +176,6 @@ Vue.component('image-scratcher', {
             this.lastMoveY = moveEndY;
             // Scratch line from previous coordinates to current coordinates
             this.eraseScratchLine(moveStartX, moveStartY, moveEndX, moveEndY);
-            // Check if canvas is completely scratched
             // Redraw
             this.draw();
         },
@@ -187,9 +188,9 @@ Vue.component('image-scratcher', {
             this.scratchContext.lineTo(endX, endY);
             this.scratchContext.closePath();
             this.scratchContext.stroke();
-            this.unscratchedPercent();
+            this.checkScratched();
         },
-        unscratchedPercent() {
+        checkScratched() {
             const width = this.displayWidth();
             const height = this.displayHeight();
             const dataDisplay = this.context.getImageData(0, 0, width, height);
@@ -204,7 +205,13 @@ Vue.component('image-scratcher', {
                 if(!scratchAlpha) { continue;}
                 pixelScratched++;
             }
-            return pixelScratched/pixelTotal;
+            if(this.finished) { return;}
+            if(pixelScratched/pixelTotal < SCRATCH_COMPLETE_PERCENT) { return;}
+            this.scratchContext.fillStyle = 'SCRATCH_SHADOW_COLOR';
+            this.scratchContext.fillRect(0, 0, this.displayWidth(), this.displayHeight());
+            this.draw();
+            this.finished = true;
+            this.$emit(EVENT_FINISHED);
         },
     },
 });

@@ -10,7 +10,12 @@ import './scratcher.js';
 new Vue({
     el: '#root',
     data: {
-        height: 500,
-        width: 500,
+        height: 400,
+        width: 400,
     },
+    methods: {
+        finished() {
+            console.log('Finished')
+        }
+    }
 });
