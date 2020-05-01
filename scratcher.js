@@ -134,6 +134,8 @@ Vue.component('image-scratcher', {
             const width = this.displayWidth();
             const height = this.displayHeight();
             //
+            if(!isFinite(width) || !isFinite(height)) { return;}
+            //
             const scratchCanvas = this.scratchContext.canvas;
             scratchCanvas.width = width;
             scratchCanvas.height = height;
@@ -144,9 +146,10 @@ Vue.component('image-scratcher', {
         },
         draw() {
             if(!this.foregroundReady || !this.backgroundReady) { return;}
-            // Draw top layer with scratched portion removed
             const width = this.displayWidth();
             const height = this.displayHeight();
+            if(!isFinite(width) || !isFinite(height)) { return;}
+            // Draw top layer with scratched portion removed
             this.context.save();
             this.context.fillStyle = 'black';
             this.context.fillRect(0, 0, width, height);
@@ -211,6 +214,9 @@ Vue.component('image-scratcher', {
             this.context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
         },
         handleMouseMove(mouseEvent) {
+            const width = this.displayWidth();
+            const height = this.displayHeight();
+            if(!isFinite(width) || !isFinite(height)) { return;}
             // Calculate coordinates of event relative to the canvas
             const bounds = this.$el.getBoundingClientRect();
             const moveEndX = mouseEvent.clientX - bounds.left;
