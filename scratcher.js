@@ -20,6 +20,8 @@ import Vue from './vue.esm.browser.js';
 
 //-- Constants -----------------------------------
 export const EVENT_FINISHED = 'finished';
+const SCRATCH_FOREGROUND_DEFAULT = '#333';
+const SCRATCH_BACKGROUND_DEFAULT = '#888';
 const SCRATCH_LINE_WIDTH = 32;
 const SCRATCH_LAYER_THICKNESS = 2;
 const SCRATCH_SHADOW_COLOR = '#666';
@@ -34,8 +36,8 @@ Vue.component('image-scratcher', {
     `),
     data: function () {
         return {
-            imageForeground: new Image(),
-            imageBackground: new Image(),
+            imageForeground: null,
+            imageBackground: null,
             foregroundReady: false,
             backgroundReady: false,
             lastMoveX: null,
@@ -48,35 +50,46 @@ Vue.component('image-scratcher', {
         height: Number,
         foreground: {
             type: String,
-            required: true,
+            default: SCRATCH_FOREGROUND_DEFAULT,
         },
         background: {
             type: String,
-            required: true,
+            default: SCRATCH_BACKGROUND_DEFAULT,
         },
     },
     mounted() {
-        //
+        // Setup main display context
+        this.context = this.$el.getContext('2d');
+        // Setup scratch canvas
         let scratchCanvas = document.createElement('canvas');
         this.scratchContext = scratchCanvas.getContext('2d');
-        //
-        this.context = this.$el.getContext('2d');
-        //
-        this.imageForeground.addEventListener('load', () => {
+        // Handle foreground / background colors (instead of images)
+        if(this.foreground[0] === '#') {
             this.foregroundReady = true;
-        });
-        this.imageBackground.addEventListener('load', () => {
+        }
+        if(this.background[0] === '#') {
             this.backgroundReady = true;
-            this.handleSizeSet();
-        });
+        }
+        this.handleSizeSet();
     },
     watch: {
         width: 'handleSizeSet',
         height: 'handleSizeSet',
+        foregroundReady: 'draw',
+        backgroundReady: 'draw',
         foreground: {
             immediate: true,
             handler: function (valueNew) {
                 this.foregroundReady = false;
+                if(this.foreground[0] === '#') {
+                    this.foregroundReady = true;
+                    return;
+                }
+                this.imageForeground = new Image();
+                this.imageForeground.onload = () => {
+                    this.foregroundReady = true;
+                    this.handleSizeSet();
+                };
                 this.imageForeground.src = valueNew;
             },
         },
@@ -84,24 +97,37 @@ Vue.component('image-scratcher', {
             immediate: true,
             handler: function (valueNew) {
                 this.backgroundReady = false;
+                if(this.background[0] === '#') {
+                    this.backgroundReady = true;
+                    return;
+                }
+                this.imageBackground = new Image();
+                this.imageBackground.onload = () => {
+                    this.backgroundReady = true;
+                    this.handleSizeSet();
+                };
                 this.imageBackground.src = valueNew;
             },
         },
-        foregroundReady: 'draw',
-        backgroundReady: 'draw',
     },
     methods: {
         displayWidth: function () {
-            if(isFinite(this.width)) {
-                return this.width;
+            if(isFinite(this.width)) { return this.width;}
+            if(this.imageBackground && this.backgroundReady) {
+                return this.imageBackground.naturalWidth;
             }
-            return this.imageBackground.naturalWidth;
+            if(this.imageForeground && this.foregroundReady) {
+                return this.imageForeground.naturalWidth;
+            }
         },
         displayHeight: function () {
-            if(isFinite(this.height)) {
-                return this.height;
+            if(isFinite(this.height)) { return this.height;}
+            if(this.imageBackground && this.backgroundReady) {
+                return this.imageBackground.naturalHeight;
             }
-            return this.imageBackground.naturalHeight;
+            if(this.imageForeground && this.foregroundReady) {
+                return this.imageForeground.naturalHeight;
+            }
         },
         handleSizeSet() {
             //
@@ -132,17 +158,35 @@ Vue.component('image-scratcher', {
             );
             // Draw foreground onto scratch layer content
             this.context.globalCompositeOperation = 'source-atop';
-            this.centerImage(this.imageForeground);
+            this.drawForeground();
             // Add shadow / thickness to scratch layer
             // this.context.globalCompositeOperation = 'destination-over';
             this.context.drawImage(this.scratchContext.canvas, 0, 0);
             // Fill background in empty area, and crop to background shape
             this.context.globalCompositeOperation = 'destination-atop';
-            this.centerImage(this.imageBackground);
+            this.drawBackground();
             //
             this.context.restore();
         },
-        centerImage(image, context) {
+        drawForeground() {
+            if(this.imageForeground) {
+                this.centerImage(this.imageForeground);
+                return;
+            }
+        },
+        drawBackground() {
+            if(this.imageBackground) {
+                this.centerImage(this.imageBackground);
+                return;
+            }
+            let fillColor = SCRATCH_BACKGROUND_DEFAULT;
+            if(this.background[0] === '#') {
+                fillColor = this.background;
+            }
+            this.context.fillStyle = fillColor;
+            this.context.fillRect(0, 0, this.displayWidth(), this.displayHeight());
+        },
+        centerImage(image) {
             const width = this.displayWidth();
             const height = this.displayHeight();
             let offsetX = 0;
@@ -158,8 +202,7 @@ Vue.component('image-scratcher', {
                 drawHeight = aspectRatioImage * drawWidth;
                 offsetY = (height - drawHeight) / 2;
             }
-            if(!context) { context = this.context;}
-            context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
+            this.context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
         },
         handleMouseMove(mouseEvent) {
             // Calculate coordinates of event relative to the canvas
