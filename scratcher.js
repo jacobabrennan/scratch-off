@@ -173,6 +173,12 @@ Vue.component('image-scratcher', {
                 this.centerImage(this.imageForeground);
                 return;
             }
+            let fillColor = SCRATCH_FOREGROUND_DEFAULT;
+            if(this.foreground[0] === '#') {
+                fillColor = this.foreground;
+            }
+            this.context.fillStyle = fillColor;
+            this.context.fillRect(0, 0, this.displayWidth(), this.displayHeight());
         },
         drawBackground() {
             if(this.imageBackground) {
