@@ -9,9 +9,6 @@
     width="Integer"
     height="Integer"
     @finished="[...]"
-    scratch-percent="Number, [0,1]"
-    shape="background or foreground (background)"
-    reveal="Boolean (false)"
 />
 */
 
@@ -36,8 +33,6 @@ Vue.component('image-scratcher', {
     `),
     data: function () {
         return {
-            imageForeground: null,
-            imageBackground: null,
             foregroundReady: false,
             backgroundReady: false,
             lastMoveX: null,
@@ -79,56 +74,14 @@ Vue.component('image-scratcher', {
         backgroundReady: 'draw',
         foreground: {
             immediate: true,
-            handler: function (valueNew) {
-                this.foregroundReady = false;
-                if(this.foreground[0] === '#') {
-                    this.foregroundReady = true;
-                    return;
-                }
-                this.imageForeground = new Image();
-                this.imageForeground.onload = () => {
-                    this.foregroundReady = true;
-                    this.handleSizeSet();
-                };
-                this.imageForeground.src = valueNew;
-            },
+            handler: 'handleForegroundSet',
         },
         background: {
             immediate: true,
-            handler: function (valueNew) {
-                this.backgroundReady = false;
-                if(this.background[0] === '#') {
-                    this.backgroundReady = true;
-                    return;
-                }
-                this.imageBackground = new Image();
-                this.imageBackground.onload = () => {
-                    this.backgroundReady = true;
-                    this.handleSizeSet();
-                };
-                this.imageBackground.src = valueNew;
-            },
+            handler: 'handleBackgroundSet',
         },
     },
     methods: {
-        displayWidth: function () {
-            if(isFinite(this.width)) { return this.width;}
-            if(this.imageBackground && this.backgroundReady) {
-                return this.imageBackground.naturalWidth;
-            }
-            if(this.imageForeground && this.foregroundReady) {
-                return this.imageForeground.naturalWidth;
-            }
-        },
-        displayHeight: function () {
-            if(isFinite(this.height)) { return this.height;}
-            if(this.imageBackground && this.backgroundReady) {
-                return this.imageBackground.naturalHeight;
-            }
-            if(this.imageForeground && this.foregroundReady) {
-                return this.imageForeground.naturalHeight;
-            }
-        },
         handleSizeSet() {
             //
             const width = this.displayWidth();
@@ -143,6 +96,50 @@ Vue.component('image-scratcher', {
             this.$el.width = width;
             this.$el.height = height;
             this.draw();
+        },
+        handleForegroundSet(valueNew) {
+            this.foregroundReady = false;
+            if(this.foreground[0] === '#') {
+                this.foregroundReady = true;
+                return;
+            }
+            this.foregroundImage = new Image();
+            this.foregroundImage.onload = () => {
+                this.foregroundReady = true;
+                this.handleSizeSet();
+            };
+            this.foregroundImage.src = valueNew;
+        },
+        handleBackgroundSet(valueNew) {
+            this.backgroundReady = false;
+            if(this.background[0] === '#') {
+                this.backgroundReady = true;
+                return;
+            }
+            this.backgroundImage = new Image();
+            this.backgroundImage.onload = () => {
+                this.backgroundReady = true;
+                this.handleSizeSet();
+            };
+            this.backgroundImage.src = valueNew;
+        },
+        displayWidth: function () {
+            if(isFinite(this.width)) { return this.width;}
+            if(this.backgroundImage && this.backgroundReady) {
+                return this.backgroundImage.naturalWidth;
+            }
+            if(this.foregroundImage && this.foregroundReady) {
+                return this.foregroundImage.naturalWidth;
+            }
+        },
+        displayHeight: function () {
+            if(isFinite(this.height)) { return this.height;}
+            if(this.backgroundImage && this.backgroundReady) {
+                return this.backgroundImage.naturalHeight;
+            }
+            if(this.foregroundImage && this.foregroundReady) {
+                return this.foregroundImage.naturalHeight;
+            }
         },
         draw() {
             if(!this.foregroundReady || !this.backgroundReady) { return;}
@@ -172,8 +169,8 @@ Vue.component('image-scratcher', {
             this.context.restore();
         },
         drawForeground() {
-            if(this.imageForeground) {
-                this.centerImage(this.imageForeground);
+            if(this.foregroundImage) {
+                this.centerImage(this.foregroundImage);
                 return;
             }
             let fillColor = SCRATCH_FOREGROUND_DEFAULT;
@@ -184,8 +181,8 @@ Vue.component('image-scratcher', {
             this.context.fillRect(0, 0, this.displayWidth(), this.displayHeight());
         },
         drawBackground() {
-            if(this.imageBackground) {
-                this.centerImage(this.imageBackground);
+            if(this.backgroundImage) {
+                this.centerImage(this.backgroundImage);
                 return;
             }
             let fillColor = SCRATCH_BACKGROUND_DEFAULT;
