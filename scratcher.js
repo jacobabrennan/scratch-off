@@ -12,11 +12,8 @@
 />
 */
 
-//-- Dependencies --------------------------------
-import Vue from './vue.esm.browser.js';
-
 //-- Constants -----------------------------------
-export const EVENT_FINISHED = 'finished';
+const EVENT_FINISHED = 'finished';
 const SCRATCH_FOREGROUND_DEFAULT = '#333';
 const SCRATCH_BACKGROUND_DEFAULT = '#888';
 const SCRATCH_LINE_WIDTH = 32;
