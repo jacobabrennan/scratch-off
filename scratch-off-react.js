@@ -22,27 +22,45 @@ const SCRATCH_LAYER_THICKNESS = 2;
 const SCRATCH_SHADOW_COLOR = '#666';
 const SCRATCH_COMPLETE_PERCENT = 98/100;
 
+//-- Default Data --------------------------------
+const defaultForeground = {
+    image: null,
+    color: SCRATCH_FOREGROUND_DEFAULT,
+    ready: false,
+};
+const defaultBackground = {
+    image: null,
+    color: SCRATCH_BACKGROUND_DEFAULT,
+    ready: false,
+};
 
 //------------------------------------------------
 function ScratchOff({width, height, background, foreground, onfinished}) {
     const canvasReference = React.useRef(null);
     const [context, setContext] = React.useState(null);
     const [scratchContext, setScratchContext] = React.useState(null);
+    const [foregroundData, setForeground] = React.useState(defaultForeground);
+    const [backgroundData, setBackground] = React.useState(defaultBackground);
     const [data, setData] = React.useState({
-        foregroundReady: false,
-        backgroundReady: false,
         lastMoveX: null,
         lastMoveY: null,
         completed: false,
     });
+    // Load images from props
+    React.useEffect(() => {
+        loadImage(background, setBackground);
+    }, [background]);
+    React.useEffect(() => {
+        loadImage(foreground, setForeground);
+    }, [foreground]);
     // Setup display canvas and scratch canvas
     React.useEffect(() => {
         setup(canvasReference.current, setContext, setScratchContext);
     }, [canvasReference, setContext, setScratchContext]);
     // Perform initial draw to display canvas
     React.useEffect(() => {
-        draw(context, scratchContext, background, foreground);
-    }, [context, scratchContext, background, foreground])
+        draw(context, scratchContext, backgroundData, foregroundData);
+    }, [context, scratchContext, backgroundData, foregroundData])
     // Render DOM
     return (
         <canvas
@@ -69,6 +87,33 @@ function setup(canvas, setContext, setScratchContext) {
     //     this.backgroundReady = true;
     // }
     // this.handleSizeSet();
+}
+function loadImage(propString, setData) {
+    // Handle hex color props
+    if(propString[0] === '#') {
+        setData({
+            image: null,
+            color: propString,
+            ready: true,
+        });
+        return;
+    }
+    // Handle Urls
+    const layerImage = new Image();
+    layerImage.onload = () => {
+        setData({
+            image: layerImage,
+            color: null,
+            ready: true,
+        });
+    };
+    layerImage.src = propString;
+}
+function draw(context, scratchContext, background, foreground) {
+    if(!context || !scratchContext) { return;}
+    if(background.image) {
+        context.drawImage(background.image, 0, 0)
+    }
 }
 
 
