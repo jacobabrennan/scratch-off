@@ -2,6 +2,7 @@
 
 //==============================================================================
 
+
 /*
 <scratcher
     foreground="url or hex color"
@@ -21,9 +22,12 @@ const SCRATCH_LAYER_THICKNESS = 2;
 const SCRATCH_SHADOW_COLOR = '#666';
 const SCRATCH_COMPLETE_PERCENT = 98/100;
 
+
 //------------------------------------------------
-function ScratchOff(props) {
-    const canvasDisplay = React.useRef(null);
+function ScratchOff({width, height, background, foreground, onfinished}) {
+    const canvasReference = React.useRef(null);
+    const [context, setContext] = React.useState(null);
+    const [scratchContext, setScratchContext] = React.useState(null);
     const [data, setData] = React.useState({
         foregroundReady: false,
         backgroundReady: false,
@@ -31,19 +35,50 @@ function ScratchOff(props) {
         lastMoveY: null,
         completed: false,
     });
+    // Setup display canvas and scratch canvas
+    React.useEffect(() => {
+        setup(canvasReference.current, setContext, setScratchContext);
+    }, [canvasReference, setContext, setScratchContext]);
+    // Perform initial draw to display canvas
+    React.useEffect(() => {
+        draw(context, scratchContext, background, foreground);
+    }, [context, scratchContext, background, foreground])
+    // Render DOM
     return (
-        <canvas ref={canvasDisplay} />
+        <canvas
+            ref={canvasReference}
+            onMouseMove={() => {}}
+        />
     );
 }
+
+function setup(canvas, setContext, setScratchContext) {
+    // Setup main display context
+    const context = canvas.getContext('2d');
+    // Setup scratch canvas
+    const scratchCanvas = document.createElement('canvas');
+    const scratchContext = scratchCanvas.getContext('2d');
+    //
+    setContext(context);
+    setScratchContext(scratchContext);
+    // // Handle foreground / background colors (instead of images)
+    // if(this.foreground[0] === '#') {
+    //     this.foregroundReady = true;
+    // }
+    // if(this.background[0] === '#') {
+    //     this.backgroundReady = true;
+    // }
+    // this.handleSizeSet();
+}
+
+
+
 // Vue.component('image-scratcher', {
 //     template: (`
 //         <keep-alive>
 //             <canvas @mousemove="handleMouseMove" />
 //         </keep-alive>
 //     `),
-//     data: function () {
-//         return ;
-//     },
 //     props: {
 //         width: Number,
 //         height: Number,
@@ -55,21 +90,6 @@ function ScratchOff(props) {
 //             type: String,
 //             default: SCRATCH_BACKGROUND_DEFAULT,
 //         },
-//     },
-//     mounted() {
-//         // Setup main display context
-//         this.context = this.$el.getContext('2d');
-//         // Setup scratch canvas
-//         let scratchCanvas = document.createElement('canvas');
-//         this.scratchContext = scratchCanvas.getContext('2d');
-//         // Handle foreground / background colors (instead of images)
-//         if(this.foreground[0] === '#') {
-//             this.foregroundReady = true;
-//         }
-//         if(this.background[0] === '#') {
-//             this.backgroundReady = true;
-//         }
-//         this.handleSizeSet();
 //     },
 //     watch: {
 //         width: 'handleSizeSet',
