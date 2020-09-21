@@ -84,7 +84,7 @@ Vue.component('image-scratcher', {
             const width = this.displayWidth();
             const height = this.displayHeight();
             //
-            if(!isFinite(width) || !isFinite(height)) { return;}
+            if(!Number.isFinite(width) || !Number.isFinite(height)) { return;}
             //
             const scratchCanvas = this.scratchContext.canvas;
             scratchCanvas.width = width;
@@ -121,7 +121,7 @@ Vue.component('image-scratcher', {
             this.backgroundImage.src = valueNew;
         },
         displayWidth: function () {
-            if(isFinite(this.width)) { return this.width;}
+            if(Number.isFinite(this.width)) { return this.width;}
             if(this.backgroundImage && this.backgroundReady) {
                 return this.backgroundImage.naturalWidth;
             }
@@ -130,7 +130,7 @@ Vue.component('image-scratcher', {
             }
         },
         displayHeight: function () {
-            if(isFinite(this.height)) { return this.height;}
+            if(Number.isFinite(this.height)) { return this.height;}
             if(this.backgroundImage && this.backgroundReady) {
                 return this.backgroundImage.naturalHeight;
             }
@@ -142,7 +142,7 @@ Vue.component('image-scratcher', {
             if(!this.foregroundReady || !this.backgroundReady) { return;}
             const width = this.displayWidth();
             const height = this.displayHeight();
-            if(!isFinite(width) || !isFinite(height)) { return;}
+            if(!Number.isFinite(width) || !Number.isFinite(height)) { return;}
             // Draw top layer with scratched portion removed
             this.context.save();
             this.context.fillStyle = 'black';
@@ -210,7 +210,7 @@ Vue.component('image-scratcher', {
         handleMouseMove(mouseEvent) {
             const width = this.displayWidth();
             const height = this.displayHeight();
-            if(!isFinite(width) || !isFinite(height)) { return;}
+            if(!Number.isFinite(width) || !Number.isFinite(height)) { return;}
             // Calculate coordinates of event relative to the canvas
             const bounds = this.$el.getBoundingClientRect();
             const moveEndX = mouseEvent.clientX - bounds.left;

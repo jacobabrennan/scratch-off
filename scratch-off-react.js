@@ -41,6 +41,7 @@ function ScratchOff({width, height, background, foreground, onfinished}) {
     const [scratchContext, setScratchContext] = React.useState(null);
     const [foregroundData, setForeground] = React.useState(defaultForeground);
     const [backgroundData, setBackground] = React.useState(defaultBackground);
+    const [displaySize, setDisplaySize] = React.useState(null);
     const [data, setData] = React.useState({
         lastMoveX: null,
         lastMoveY: null,
@@ -57,10 +58,17 @@ function ScratchOff({width, height, background, foreground, onfinished}) {
     React.useEffect(() => {
         setup(canvasReference.current, setContext, setScratchContext);
     }, [canvasReference, setContext, setScratchContext]);
+    // Size canvas
+    React.useEffect(() => {
+        determineSize(backgroundData, foregroundData, width, height, setDisplaySize);
+    }, [backgroundData, foregroundData, width, height, setDisplaySize]);
+    React.useEffect(() => {
+        resizeCanvas(context, scratchContext, displaySize);
+    }, [context, scratchContext, displaySize]);
     // Perform initial draw to display canvas
     React.useEffect(() => {
-        draw(context, scratchContext, backgroundData, foregroundData);
-    }, [context, scratchContext, backgroundData, foregroundData])
+        draw(context, scratchContext, backgroundData, foregroundData, displaySize);
+    }, [context, scratchContext, backgroundData, foregroundData, displaySize]);
     // Render DOM
     return (
         <canvas
@@ -76,17 +84,9 @@ function setup(canvas, setContext, setScratchContext) {
     // Setup scratch canvas
     const scratchCanvas = document.createElement('canvas');
     const scratchContext = scratchCanvas.getContext('2d');
-    //
+    // Send changes to React hooks
     setContext(context);
     setScratchContext(scratchContext);
-    // // Handle foreground / background colors (instead of images)
-    // if(this.foreground[0] === '#') {
-    //     this.foregroundReady = true;
-    // }
-    // if(this.background[0] === '#') {
-    //     this.backgroundReady = true;
-    // }
-    // this.handleSizeSet();
 }
 function loadImage(propString, setData) {
     // Handle hex color props
@@ -109,7 +109,37 @@ function loadImage(propString, setData) {
     };
     layerImage.src = propString;
 }
-function draw(context, scratchContext, background, foreground) {
+function determineSize(backgroundData, foregroundData, width, height, setDisplaySize) {
+    let widthNew;
+    let heightNew;
+    if(backgroundData.image) {
+        widthNew = backgroundData.image.naturalWidth;
+        heightNew = backgroundData.image.naturalHeight;
+    }
+    else if(foregroundData.image) {
+        widthNew = foregroundData.image.naturalWidth;
+        heightNew = foregroundData.image.naturalHeight;
+    }
+    if(Number.isFinite(width)) {
+        widthNew = width;
+    }
+    if(Number.isFinite(height)) {
+        heightNew = height;
+    }
+    setDisplaySize({
+        width: widthNew,
+        height: heightNew,
+    });
+}
+function resizeCanvas(context, scratchContext, displaySize) {   
+    if(!context || !scratchContext) { return;}
+    const scratchCanvas = scratchContext.canvas;
+    scratchCanvas.width = displaySize.width;
+    scratchCanvas.height = displaySize.height;
+    context.canvas.width = displaySize.width;
+    context.canvas.height = displaySize.height;
+}
+function draw(context, scratchContext, background, foreground, displaySize) {
     if(!context || !scratchContext) { return;}
     if(background.image) {
         context.drawImage(background.image, 0, 0)
@@ -151,21 +181,6 @@ function draw(context, scratchContext, background, foreground) {
 //         },
 //     },
 //     methods: {
-//         handleSizeSet() {
-//             //
-//             const width = this.displayWidth();
-//             const height = this.displayHeight();
-//             //
-//             if(!isFinite(width) || !isFinite(height)) { return;}
-//             //
-//             const scratchCanvas = this.scratchContext.canvas;
-//             scratchCanvas.width = width;
-//             scratchCanvas.height = height;
-//             //
-//             this.$el.width = width;
-//             this.$el.height = height;
-//             this.draw();
-//         },
 //         handleForegroundSet(valueNew) {
 //             this.foregroundReady = false;
 //             if(this.foreground[0] === '#') {
@@ -191,24 +206,6 @@ function draw(context, scratchContext, background, foreground) {
 //                 this.handleSizeSet();
 //             };
 //             this.backgroundImage.src = valueNew;
-//         },
-//         displayWidth: function () {
-//             if(isFinite(this.width)) { return this.width;}
-//             if(this.backgroundImage && this.backgroundReady) {
-//                 return this.backgroundImage.naturalWidth;
-//             }
-//             if(this.foregroundImage && this.foregroundReady) {
-//                 return this.foregroundImage.naturalWidth;
-//             }
-//         },
-//         displayHeight: function () {
-//             if(isFinite(this.height)) { return this.height;}
-//             if(this.backgroundImage && this.backgroundReady) {
-//                 return this.backgroundImage.naturalHeight;
-//             }
-//             if(this.foregroundImage && this.foregroundReady) {
-//                 return this.foregroundImage.naturalHeight;
-//             }
 //         },
 //         draw() {
 //             if(!this.foregroundReady || !this.backgroundReady) { return;}
