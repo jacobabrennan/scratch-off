@@ -160,6 +160,13 @@ function draw(context, scratchContext, background, foreground, displaySize) {
     // Draw foreground onto scratch layer content
     context.globalCompositeOperation = 'source-atop';
     drawLayer(context, foreground, displaySize);
+    // Add shadow / thickness to scratch layer
+    context.drawImage(scratchContext.canvas, 0, 0);
+    // Fill background in empty area, and crop to background shape
+    context.globalCompositeOperation = 'destination-atop';
+    drawLayer(context, background, displaySize);
+    //
+    context.restore();
 }
 function drawLayer(context, layerData, displaySize) {
     // Handle Drawing Image
@@ -191,17 +198,6 @@ function centerImage(context, image, displaySize) {
 
 // Vue.component('image-scratcher', {
 //         draw() {
-//             // Draw foreground onto scratch layer content
-//             this.context.globalCompositeOperation = 'source-atop';
-//             this.drawForeground();
-//             // Add shadow / thickness to scratch layer
-//             // this.context.globalCompositeOperation = 'destination-over';
-//             this.context.drawImage(this.scratchContext.canvas, 0, 0);
-//             // Fill background in empty area, and crop to background shape
-//             this.context.globalCompositeOperation = 'destination-atop';
-//             this.drawBackground();
-//             //
-//             this.context.restore();
 //         },
 //         handleMouseMove(mouseEvent) {
 //             const width = this.displayWidth();
