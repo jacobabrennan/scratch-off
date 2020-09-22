@@ -34,7 +34,7 @@ const defaultBackground = {
     ready: false,
 };
 
-//------------------------------------------------
+//-- React Component (render function) -----------
 function ScratchOff({width, height, background, foreground, onfinished}) {
     const canvasReference = React.useRef(null);
     const [context, setContext] = React.useState(null);
@@ -78,6 +78,7 @@ function ScratchOff({width, height, background, foreground, onfinished}) {
     );
 }
 
+//-- State management utilities ------------------
 function setup(canvas, setContext, setScratchContext) {
     // Setup main display context
     const context = canvas.getContext('2d');
@@ -139,89 +140,57 @@ function resizeCanvas(context, scratchContext, displaySize) {
     context.canvas.width = displaySize.width;
     context.canvas.height = displaySize.height;
 }
+
+//-- Drawing Utilities ---------------------------
 function draw(context, scratchContext, background, foreground, displaySize) {
+    // Ensure component is ready for drawing
     if(!context || !scratchContext) { return;}
-    if(background.image) {
-        context.drawImage(background.image, 0, 0)
+    if(!background.ready || !foreground.ready) { return;}
+    if(!Number.isFinite(displaySize.width) || !Number.isFinite(displaySize.height)) { return;}
+    // Draw top layer with scratched portion removed
+    context.save();
+    context.fillStyle = 'black';
+    context.fillRect(0, 0, displaySize.width, displaySize.height);
+    context.globalCompositeOperation = 'destination-out';
+    context.drawImage(
+        scratchContext.canvas,
+        SCRATCH_LAYER_THICKNESS,
+        SCRATCH_LAYER_THICKNESS,
+    );
+    // Draw foreground onto scratch layer content
+    context.globalCompositeOperation = 'source-atop';
+    drawLayer(context, foreground, displaySize);
+}
+function drawLayer(context, layerData, displaySize) {
+    // Handle Drawing Image
+    if(layerData.image) {
+        centerImage(context, layerData.image, displaySize);
+        return;
     }
+    // Handle Drawing Color overlay
+    context.fillStyle = layerData.color;
+    context.fillRect(0, 0, displaySize.width, displaySize.height);
+}
+function centerImage(context, image, displaySize) {
+    let offsetX = 0;
+    let offsetY = 0;
+    let drawWidth = displaySize.width;
+    let drawHeight = displaySize.height;
+    const aspectRatioCanvas = displaySize.width / displaySize.height;
+    const aspectRatioImage = image.naturalWidth / image.naturalHeight;
+    if(aspectRatioCanvas >= aspectRatioImage) {
+        drawWidth = aspectRatioImage * drawHeight;
+        offsetX = (displaySize.width - drawWidth) / 2;
+    } else {
+        drawHeight = aspectRatioImage * drawWidth;
+        offsetY = (displaySize.height - drawHeight) / 2;
+    }
+    context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
 }
 
 
-
 // Vue.component('image-scratcher', {
-//     template: (`
-//         <keep-alive>
-//             <canvas @mousemove="handleMouseMove" />
-//         </keep-alive>
-//     `),
-//     props: {
-//         width: Number,
-//         height: Number,
-//         foreground: {
-//             type: String,
-//             default: SCRATCH_FOREGROUND_DEFAULT,
-//         },
-//         background: {
-//             type: String,
-//             default: SCRATCH_BACKGROUND_DEFAULT,
-//         },
-//     },
-//     watch: {
-//         width: 'handleSizeSet',
-//         height: 'handleSizeSet',
-//         foregroundReady: 'draw',
-//         backgroundReady: 'draw',
-//         foreground: {
-//             immediate: true,
-//             handler: 'handleForegroundSet',
-//         },
-//         background: {
-//             immediate: true,
-//             handler: 'handleBackgroundSet',
-//         },
-//     },
-//     methods: {
-//         handleForegroundSet(valueNew) {
-//             this.foregroundReady = false;
-//             if(this.foreground[0] === '#') {
-//                 this.foregroundReady = true;
-//                 return;
-//             }
-//             this.foregroundImage = new Image();
-//             this.foregroundImage.onload = () => {
-//                 this.foregroundReady = true;
-//                 this.handleSizeSet();
-//             };
-//             this.foregroundImage.src = valueNew;
-//         },
-//         handleBackgroundSet(valueNew) {
-//             this.backgroundReady = false;
-//             if(this.background[0] === '#') {
-//                 this.backgroundReady = true;
-//                 return;
-//             }
-//             this.backgroundImage = new Image();
-//             this.backgroundImage.onload = () => {
-//                 this.backgroundReady = true;
-//                 this.handleSizeSet();
-//             };
-//             this.backgroundImage.src = valueNew;
-//         },
 //         draw() {
-//             if(!this.foregroundReady || !this.backgroundReady) { return;}
-//             const width = this.displayWidth();
-//             const height = this.displayHeight();
-//             if(!isFinite(width) || !isFinite(height)) { return;}
-//             // Draw top layer with scratched portion removed
-//             this.context.save();
-//             this.context.fillStyle = 'black';
-//             this.context.fillRect(0, 0, width, height);
-//             this.context.globalCompositeOperation = 'destination-out';
-//             this.context.drawImage(
-//                 this.scratchContext.canvas,
-//                 SCRATCH_LAYER_THICKNESS,
-//                 SCRATCH_LAYER_THICKNESS,
-//             );
 //             // Draw foreground onto scratch layer content
 //             this.context.globalCompositeOperation = 'source-atop';
 //             this.drawForeground();
@@ -233,48 +202,6 @@ function draw(context, scratchContext, background, foreground, displaySize) {
 //             this.drawBackground();
 //             //
 //             this.context.restore();
-//         },
-//         drawForeground() {
-//             if(this.foregroundImage) {
-//                 this.centerImage(this.foregroundImage);
-//                 return;
-//             }
-//             let fillColor = SCRATCH_FOREGROUND_DEFAULT;
-//             if(this.foreground[0] === '#') {
-//                 fillColor = this.foreground;
-//             }
-//             this.context.fillStyle = fillColor;
-//             this.context.fillRect(0, 0, this.displayWidth(), this.displayHeight());
-//         },
-//         drawBackground() {
-//             if(this.backgroundImage) {
-//                 this.centerImage(this.backgroundImage);
-//                 return;
-//             }
-//             let fillColor = SCRATCH_BACKGROUND_DEFAULT;
-//             if(this.background[0] === '#') {
-//                 fillColor = this.background;
-//             }
-//             this.context.fillStyle = fillColor;
-//             this.context.fillRect(0, 0, this.displayWidth(), this.displayHeight());
-//         },
-//         centerImage(image) {
-//             const width = this.displayWidth();
-//             const height = this.displayHeight();
-//             let offsetX = 0;
-//             let offsetY = 0;
-//             let drawWidth = width;
-//             let drawHeight = height;
-//             const aspectRatioCanvas = width/height;
-//             const aspectRatioImage = image.naturalWidth / image.naturalHeight;
-//             if(aspectRatioCanvas >= aspectRatioImage) {
-//                 drawWidth = aspectRatioImage * drawHeight;
-//                 offsetX = (width - drawWidth) / 2;
-//             } else {
-//                 drawHeight = aspectRatioImage * drawWidth;
-//                 offsetY = (height - drawHeight) / 2;
-//             }
-//             this.context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
 //         },
 //         handleMouseMove(mouseEvent) {
 //             const width = this.displayWidth();
