@@ -211,11 +211,17 @@ function handleMouseMove(mouseEvent, scratchPosition, setScratchPosition) {
     const moveEndX = mouseEvent.clientX - bounds.left;
     const moveEndY = mouseEvent.clientY - bounds.top;
     // Compare to previous events (or initialize if first)
-    let moveStartX = scratchPosition.x;
-    let moveStartY = scratchPosition.y;
+    let moveStartX = scratchPosition.endX;
+    let moveStartY = scratchPosition.endY;
     if(moveStartX === null) { moveStartX = moveEndX;}
     if(moveStartY === null) { moveStartY = moveEndY;}
     // Store last movement on state, for future comparisons
+    console.log({
+        startX: moveStartX,
+        startY: moveStartY,
+        endX: moveEndX,
+        endY: moveEndY,
+    });
     setScratchPosition({
         startX: moveStartX,
         startY: moveStartY,
