@@ -33,6 +33,12 @@ const defaultBackground = {
     color: SCRATCH_BACKGROUND_DEFAULT,
     ready: false,
 };
+const defaultMousePosition = {
+    startX: null,
+    startY: null,
+    endX: null,
+    endY: null,
+};
 
 //-- React Component (render function) -----------
 function ScratchOff({width, height, background, foreground, onfinished}) {
@@ -42,11 +48,7 @@ function ScratchOff({width, height, background, foreground, onfinished}) {
     const [foregroundData, setForeground] = React.useState(defaultForeground);
     const [backgroundData, setBackground] = React.useState(defaultBackground);
     const [displaySize, setDisplaySize] = React.useState(null);
-    const [data, setData] = React.useState({
-        lastMoveX: null,
-        lastMoveY: null,
-        completed: false,
-    });
+    const [scratchPosition, setScratchPosition] = React.useState(defaultMousePosition);
     // Load images from props
     React.useEffect(() => {
         loadImage(background, setBackground);
@@ -65,15 +67,21 @@ function ScratchOff({width, height, background, foreground, onfinished}) {
     React.useEffect(() => {
         resizeCanvas(context, scratchContext, displaySize);
     }, [context, scratchContext, displaySize]);
+    // Scratch image after mouse move
+    React.useEffect(() => {
+        eraseScratchLine(context, scratchContext, scratchPosition, displaySize);
+    }, [context, scratchContext, scratchPosition, displaySize]);
     // Perform initial draw to display canvas
     React.useEffect(() => {
         draw(context, scratchContext, backgroundData, foregroundData, displaySize);
-    }, [context, scratchContext, backgroundData, foregroundData, displaySize]);
+    }, [context, scratchContext, backgroundData, foregroundData, displaySize, scratchPosition]);
     // Render DOM
     return (
         <canvas
             ref={canvasReference}
-            onMouseMove={() => {}}
+            onMouseMove={(eventMouse) => {
+                handleMouseMove(eventMouse, scratchPosition, setScratchPosition);
+            }}
         />
     );
 }
@@ -196,42 +204,36 @@ function centerImage(context, image, displaySize) {
 }
 
 
-// Vue.component('image-scratcher', {
-//         draw() {
-//         },
-//         handleMouseMove(mouseEvent) {
-//             const width = this.displayWidth();
-//             const height = this.displayHeight();
-//             if(!isFinite(width) || !isFinite(height)) { return;}
-//             // Calculate coordinates of event relative to the canvas
-//             const bounds = this.$el.getBoundingClientRect();
-//             const moveEndX = mouseEvent.clientX - bounds.left;
-//             const moveEndY = mouseEvent.clientY - bounds.top;
-//             // Compare to previous events (or initialize if first)
-//             let moveStartX = this.lastMoveX;
-//             let moveStartY = this.lastMoveY;
-//             if(moveStartX === null) { moveStartX = moveEndX;}
-//             if(moveStartY === null) { moveStartY = moveEndY;}
-//             // Store last movement on state, for future comparisons
-//             this.lastMoveX = moveEndX;
-//             this.lastMoveY = moveEndY;
-//             // Scratch line from previous coordinates to current coordinates
-//             this.eraseScratchLine(moveStartX, moveStartY, moveEndX, moveEndY);
-//             // Redraw
-//             this.draw();
-//         },
-//         eraseScratchLine(startX, startY, endX, endY) {
-//             // Draw a line on compositing canvas from start(x,y) to end(x,y)
-//             this.scratchContext.strokeStyle = SCRATCH_SHADOW_COLOR;
-//             this.scratchContext.lineWidth = SCRATCH_LINE_WIDTH;
-//             this.scratchContext.beginPath();
-//             this.scratchContext.moveTo(startX, startY);
-//             this.scratchContext.lineTo(endX, endY);
-//             this.scratchContext.closePath();
-//             this.scratchContext.stroke();
-//             this.checkScratched();
-//         },
-//         checkScratched() {
+//-- Interaction (mouse) utilities ---------------
+function handleMouseMove(mouseEvent, scratchPosition, setScratchPosition) {
+    // Calculate coordinates of event relative to the canvas
+    const bounds = mouseEvent.currentTarget.getBoundingClientRect();
+    const moveEndX = mouseEvent.clientX - bounds.left;
+    const moveEndY = mouseEvent.clientY - bounds.top;
+    // Compare to previous events (or initialize if first)
+    let moveStartX = scratchPosition.x;
+    let moveStartY = scratchPosition.y;
+    if(moveStartX === null) { moveStartX = moveEndX;}
+    if(moveStartY === null) { moveStartY = moveEndY;}
+    // Store last movement on state, for future comparisons
+    setScratchPosition({
+        startX: moveStartX,
+        startY: moveStartY,
+        endX: moveEndX,
+        endY: moveEndY,
+    });
+}
+function eraseScratchLine(context, scratchContext, scratchPosition, displaySize) {
+    if(!context || !scratchContext) { return;}
+    // Draw a line on compositing canvas from start(x,y) to end(x,y)
+    scratchContext.strokeStyle = SCRATCH_SHADOW_COLOR;
+    scratchContext.lineWidth = SCRATCH_LINE_WIDTH;
+    scratchContext.beginPath();
+    scratchContext.moveTo(scratchPosition.startX, scratchPosition.startY);
+    scratchContext.lineTo(scratchPosition.endX, scratchPosition.endY);
+    scratchContext.closePath();
+    scratchContext.stroke();
+    // Check if scratching finished
 //             const width = this.displayWidth();
 //             const height = this.displayHeight();
 //             const dataDisplay = this.context.getImageData(0, 0, width, height);
@@ -256,3 +258,5 @@ function centerImage(context, image, displaySize) {
 //         },
 //     },
 // });
+}
+
