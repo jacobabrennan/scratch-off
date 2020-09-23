@@ -25,12 +25,12 @@ const SCRATCH_COMPLETE_PERCENT = 98/100;
 //-- Default Data --------------------------------
 const defaultForeground = {
     image: null,
-    color: SCRATCH_FOREGROUND_DEFAULT,
+    color: null,
     ready: false,
 };
 const defaultBackground = {
     image: null,
-    color: SCRATCH_BACKGROUND_DEFAULT,
+    color: null,
     ready: false,
 };
 const defaultMousePosition = {
@@ -42,6 +42,8 @@ const defaultMousePosition = {
 
 //-- React Component (render function) -----------
 function ScratchOff({width, height, background, foreground, onfinished}) {
+    if(background === undefined) { background = SCRATCH_BACKGROUND_DEFAULT;}
+    if(foreground === undefined) { foreground = SCRATCH_FOREGROUND_DEFAULT;}
     const canvasReference = React.useRef(null);
     const [complete, setComplete] = React.useState(false);
     const [context, setContext] = React.useState(null);
@@ -126,6 +128,8 @@ function loadImage(propString, setData) {
     layerImage.src = propString;
 }
 function determineSize(backgroundData, foregroundData, width, height, setDisplaySize) {
+    if(typeof width === 'string') { width = parseInt(width);}
+    if(typeof height === 'string') { height = parseInt(height);}
     let widthNew;
     let heightNew;
     if(backgroundData.image) {
