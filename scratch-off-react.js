@@ -43,6 +43,7 @@ const defaultMousePosition = {
 //-- React Component (render function) -----------
 function ScratchOff({width, height, background, foreground, onfinished}) {
     const canvasReference = React.useRef(null);
+    const [complete, setComplete] = React.useState(false);
     const [context, setContext] = React.useState(null);
     const [scratchContext, setScratchContext] = React.useState(null);
     const [foregroundData, setForeground] = React.useState(defaultForeground);
@@ -69,12 +70,18 @@ function ScratchOff({width, height, background, foreground, onfinished}) {
     }, [context, scratchContext, displaySize]);
     // Scratch image after mouse move
     React.useEffect(() => {
-        eraseScratchLine(context, scratchContext, scratchPosition, displaySize);
-    }, [context, scratchContext, scratchPosition, displaySize]);
+        eraseScratchLine(context, scratchContext, scratchPosition, displaySize, complete, setComplete);
+    }, [context, scratchContext, scratchPosition, displaySize, complete, setComplete]);
     // Perform initial draw to display canvas
     React.useEffect(() => {
         draw(context, scratchContext, backgroundData, foregroundData, displaySize);
     }, [context, scratchContext, backgroundData, foregroundData, displaySize, scratchPosition]);
+    // Invoke callback when complete
+    React.useEffect(() => {
+        if(complete) {
+            onfinished();
+        }
+    }, [complete]);
     // Render DOM
     return (
         <canvas
@@ -216,12 +223,6 @@ function handleMouseMove(mouseEvent, scratchPosition, setScratchPosition) {
     if(moveStartX === null) { moveStartX = moveEndX;}
     if(moveStartY === null) { moveStartY = moveEndY;}
     // Store last movement on state, for future comparisons
-    console.log({
-        startX: moveStartX,
-        startY: moveStartY,
-        endX: moveEndX,
-        endY: moveEndY,
-    });
     setScratchPosition({
         startX: moveStartX,
         startY: moveStartY,
@@ -229,8 +230,9 @@ function handleMouseMove(mouseEvent, scratchPosition, setScratchPosition) {
         endY: moveEndY,
     });
 }
-function eraseScratchLine(context, scratchContext, scratchPosition, displaySize) {
+function eraseScratchLine(context, scratchContext, scratchPosition, displaySize, complete, setComplete) {
     if(!context || !scratchContext) { return;}
+    if(!Number.isFinite(scratchPosition.startX) || !Number.isFinite(scratchPosition.startY)) { return;}
     // Draw a line on compositing canvas from start(x,y) to end(x,y)
     scratchContext.strokeStyle = SCRATCH_SHADOW_COLOR;
     scratchContext.lineWidth = SCRATCH_LINE_WIDTH;
@@ -240,29 +242,21 @@ function eraseScratchLine(context, scratchContext, scratchPosition, displaySize)
     scratchContext.closePath();
     scratchContext.stroke();
     // Check if scratching finished
-//             const width = this.displayWidth();
-//             const height = this.displayHeight();
-//             const dataDisplay = this.context.getImageData(0, 0, width, height);
-//             const dataScratch = this.scratchContext.getImageData(0, 0, width, height);
-//             let pixelTotal = 0;
-//             let pixelScratched = 0;
-//             for(let displayIndex = 3; displayIndex < dataDisplay.data.length; displayIndex += 4) {
-//                 const alpha = dataDisplay.data[displayIndex];
-//                 if(!alpha) { continue;}
-//                 pixelTotal++;
-//                 const scratchAlpha = dataScratch.data[displayIndex];
-//                 if(!scratchAlpha) { continue;}
-//                 pixelScratched++;
-//             }
-//             if(this.finished) { return;}
-//             if(pixelScratched/pixelTotal < SCRATCH_COMPLETE_PERCENT) { return;}
-//             this.scratchContext.fillStyle = 'SCRATCH_SHADOW_COLOR';
-//             this.scratchContext.fillRect(0, 0, this.displayWidth(), this.displayHeight());
-//             this.draw();
-//             this.finished = true;
-//             this.$emit(EVENT_FINISHED);
-//         },
-//     },
-// });
+    if(complete) { return;}
+    const dataDisplay = context.getImageData(0, 0, displaySize.width, displaySize.height);
+    const dataScratch = scratchContext.getImageData(0, 0, displaySize.width, displaySize.height);
+    let pixelTotal = 0;
+    let pixelScratched = 0;
+    for(let displayIndex = 3; displayIndex < dataDisplay.data.length; displayIndex += 4) {
+        const alpha = dataDisplay.data[displayIndex];
+        if(!alpha) { continue;}
+        pixelTotal++;
+        const scratchAlpha = dataScratch.data[displayIndex];
+        if(!scratchAlpha) { continue;}
+        pixelScratched++;
+    }
+    if(pixelScratched/pixelTotal < SCRATCH_COMPLETE_PERCENT) { return;}
+    scratchContext.fillStyle = SCRATCH_SHADOW_COLOR;
+    scratchContext.fillRect(0, 0, displaySize.width, displaySize.height);
+    setComplete(true);
 }
-

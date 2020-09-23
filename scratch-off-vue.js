@@ -256,7 +256,7 @@ Vue.component('image-scratcher', {
             }
             if(this.finished) { return;}
             if(pixelScratched/pixelTotal < SCRATCH_COMPLETE_PERCENT) { return;}
-            this.scratchContext.fillStyle = 'SCRATCH_SHADOW_COLOR';
+            this.scratchContext.fillStyle = SCRATCH_SHADOW_COLOR;
             this.scratchContext.fillRect(0, 0, this.displayWidth(), this.displayHeight());
             this.draw();
             this.finished = true;
