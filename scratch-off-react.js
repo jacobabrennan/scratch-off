@@ -82,7 +82,7 @@ export default function ScratchOff({width, height, background, foreground, onfin
     }, [context, scratchContext, backgroundData, foregroundData, displaySize, scratchPosition]);
     // Invoke callback when complete
     React.useEffect(() => {
-        if(complete) {
+        if(complete & onfinished) {
             onfinished();
         }
     }, [complete]);
