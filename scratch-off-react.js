@@ -13,8 +13,10 @@
 />
 */
 
+//-- Dependencies --------------------------------
+import React from 'react';
+
 //-- Constants -----------------------------------
-const EVENT_FINISHED = 'finished';
 const SCRATCH_FOREGROUND_DEFAULT = '#333';
 const SCRATCH_BACKGROUND_DEFAULT = '#888';
 const SCRATCH_LINE_WIDTH = 32;
@@ -41,7 +43,7 @@ const defaultMousePosition = {
 };
 
 //-- React Component (render function) -----------
-function ScratchOff({width, height, background, foreground, onfinished}) {
+export default function ScratchOff({width, height, background, foreground, onfinished}) {
     if(background === undefined) { background = SCRATCH_BACKGROUND_DEFAULT;}
     if(foreground === undefined) { foreground = SCRATCH_FOREGROUND_DEFAULT;}
     const canvasReference = React.useRef(null);
