@@ -22,7 +22,7 @@ const SCRATCH_SHADOW_COLOR = '#666';
 const SCRATCH_COMPLETE_PERCENT = 98/100;
 
 //------------------------------------------------
-Vue.component('image-scratcher', {
+Vue.component('scratch-off', {
     template: (`
         <keep-alive>
             <canvas @mousemove="handleMouseMove" />

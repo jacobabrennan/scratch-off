@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" /> 
+        <title>Scratcher Example</title>
+        <!-- Here we import Vue and the Component -->
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+        <script src="../scratch-off-vue.js"></script>
+        <!-- Some styles for the demo page -->
+        <style>
+            .example {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                margin: 20px 0;
+                font-size: larger;
+                font-weight: bold;
+            }
+            .complete {
+                color: green;
+            }
+        </style>
+    </head>
+    <body>
+        <!--
+            This is the root where we will mount the Vue client.
+            Note how there are two separate scratch-off components.
+            Each one listens for a finished event, and then reveals one of the spans.
+        -->
+        <div id="root">
+            <h1>Scratch-off Examples</h1>
+            <div class="example">
+                <span v-if="!revealed1">Example of Scratching to reveal an image</span>
+                <span v-else class="complete">Image fully scratched!</span>
+                <scratch-off
+                    :width="width"
+                    :height="height"
+                    foreground="#aaa"
+                    background="images/example.png"
+                    @finished="revealed1 = true"
+                ></scratch-off>
+            </div>
+            <div class="example">
+                <span v-if="!revealed2">Example of Scratching away an image</span>
+                <span v-else class="complete">Image fully scratched!</span>
+                <scratch-off
+                    :width="width"
+                    :height="height"
+                    foreground="images/example.png"
+                    background="images/shape.svg"
+                    @finished="revealed2 = true"
+                ></scratch-off>
+            </div>
+        </div>
+        <!-- This script creates the Vue client -->
+        <script>
+            new Vue({
+                el: '#root',
+                data: {
+                    width: 256,
+                    height: 256,
+                    revealed1: false,
+                    revealed2: false,
+                },
+            });
+        </script>
+    </body>
+</html>
