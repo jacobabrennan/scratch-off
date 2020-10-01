@@ -2,6 +2,8 @@
 Scratchable Image component for multiple frameworks, currently supporting:
 * Vue
 * React
+
+[Click here for a live example.](https://jacobabrennan.github.io/scratch-off/examples/)
 ## About
 Scratch-Off is a component that displays an image covered in a scratchable layer - like a digital scratch ticket! Users can enjoy scratching to reveal images, and your app can respond when the image is fully scratched. The component has options to customize colors or specify an image overlay, and intelligently handles display width / height. Versions are available for both Vue and React.
 ## Getting Started
